@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Pipeline Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0D1416;
+    --panel: #141C1F;
+    --panel-2: #1B2528;
+    --border: #29373B;
+    --text: #ECF1F1;
+    --muted: #8FA0A3;
+    --ai: #8B93FF;
+    --ai-dim: #8B93FF33;
+    --algo: #F2B441;
+    --algo-dim: #F2B44133;
+    --neutral: #4FD1C5;
+    --neutral-dim: #4FD1C533;
+    --danger: #E8637A;
+    --radius: 10px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #16232614 0%, transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--ai-dim); }
+
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:40px 24px 80px;
+  }
+
+  /* ---------- Header ---------- */
+  header{ margin-bottom:32px; }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--neutral);
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:18px; height:1px;
+    background:var(--neutral);
+    display:inline-block;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:clamp(28px, 4vw, 42px);
+    margin:0 0 12px;
+    letter-spacing:-0.01em;
+  }
+  header p{
+    color:var(--muted);
+    max-width:620px;
+    font-size:15px;
+    margin:0;
+  }
+
+  /* ---------- Controls ---------- */
+  .controls{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px;
+    margin:28px 0 24px;
+  }
+  .control-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  #queryInput{
+    flex:1 1 320px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px;
+    padding:12px 14px;
+    border-radius:8px;
+    outline:none;
+  }
+  #queryInput:focus-visible{ border-color:var(--ai); box-shadow:0 0 0 3px var(--ai-dim); }
+  button{
+    font-family:'Inter', sans-serif;
+    cursor:pointer;
+  }
+  #runBtn{
+    background:var(--ai);
+    color:#0D1416;
+    border:none;
+    font-weight:600;
+    font-size:14px;
+    padding:12px 22px;
+    border-radius:8px;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  #runBtn:hover{ opacity:.9; }
+  #runBtn:active{ transform:scale(.97); }
+  #runBtn:focus-visible{ outline:2px solid var(--ai); outline-offset:2px; }
+  #runBtn:disabled{ opacity:.5; cursor:not-allowed; }
+
+  .chips{
+    margin-top:12px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .chip{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--muted);
+    font-size:12.5px;
+    padding:7px 12px;
+    border-radius:20px;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .chip:hover{ border-color:var(--neutral); color:var(--text); }
+  .chip:focus-visible{ outline:2px solid var(--neutral); outline-offset:2px; }
+
+  /* ---------- Legend ---------- */
+  .legend{
+    display:flex;
+    gap:18px;
+    flex-wrap:wrap;
+    margin:22px 0 14px;
+    font-size:12.5px;
+    color:var(--muted);
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .legend span{ display:flex; align-items:center; gap:7px; }
+  .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .dot.ai{ background:var(--ai); }
+  .dot.algo{ background:var(--algo); }
+  .dot.neutral{ background:var(--neutral); }
+
+  /* ---------- Pipeline rail ---------- */
+  .rail-scroll{
+    overflow-x:auto;
+    padding-bottom:6px;
+  }
+  .rail{
+    display:flex;
+    align-items:stretch;
+    gap:0;
+    min-width:760px;
+  }
+  .node{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    padding:14px 6px;
+    background:none;
+    border:none;
+    color:var(--muted);
+    position:relative;
+  }
+  .node:focus-visible{ outline:2px solid var(--ai); outline-offset:-2px; border-radius:8px; }
+  .node::before{
+    content:"";
+    position:absolute;
+    top:24px; left:-50%; width:100%; height:2px;
+    background:var(--border);
+    z-index:0;
+  }
+  .node:first-child::before{ display:none; }
+  .node .core{
+    width:14px; height:14px;
+    border-radius:50%;
+    background:var(--panel-2);
+    border:2px solid var(--border);
+    z-index:1;
+    transition:all .25s ease;
+  }
+  .node.ai .core{ border-color:var(--ai); }
+  .node.algo .core{ border-color:var(--algo); }
+  .node.neutral .core{ border-color:var(--neutral); }
+  .node.active .core, .node.done .core{
+    background:currentColor;
+  }
+  .node.ai.active .core, .node.ai.done .core{ background:var(--ai); box-shadow:0 0 0 4px var(--ai-dim); }
+  .node.algo.active .core, .node.algo.done .core{ background:var(--algo); box-shadow:0 0 0 4px var(--algo-dim); }
+  .node.neutral.active .core, .node.neutral.done .core{ background:var(--neutral); box-shadow:0 0 0 4px var(--neutral-dim); }
+  .node .label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    text-align:center;
+    line-height:1.3;
+    color:var(--muted);
+  }
+  .node.active .label, .node.done .label{ color:var(--text); }
+  .node:disabled{ opacity:.45; cursor:not-allowed; }
+  .node:not(:disabled){ cursor:pointer; }
+
+  /* ---------- Stage detail ---------- */
+  .stage-panel{
+    margin-top:28px;
+    display:grid;
+    grid-template-columns:260px 1fr;
+    gap:0;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+    min-height:280px;
+  }
+  @media (max-width: 720px){
+    .stage-panel{ grid-template-columns:1fr; }
+  }
+  .stage-info{
+    padding:22px;
+    border-right:1px solid var(--border);
+    background:var(--panel-2);
+  }
+  @media (max-width: 720px){
+    .stage-info{ border-right:none; border-bottom:1px solid var(--border); }
+  }
+  .stage-tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    padding:4px 9px;
+    border-radius:5px;
+    display:inline-block;
+    margin-bottom:12px;
+  }
+  .stage-tag.ai{ background:var(--ai-dim); color:var(--ai); }
+  .stage-tag.algo{ background:var(--algo-dim); color:var(--algo); }
+  .stage-tag.neutral{ background:var(--neutral-dim); color:var(--neutral); }
+  .stage-info h2{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:19px;
+    margin:0 0 10px;
+  }
+  .stage-info p{
+    font-size:13.5px;
+    color:var(--muted);
+    margin:0;
+  }
+  .stage-viz{
+    padding:22px;
+    font-size:13.5px;
+  }
+  .empty-state{
+    color:var(--muted);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:100%;
+    min-height:220px;
+    text-align:center;
+    padding:20px;
+  }
+
+  /* embedding bars */
+  .vecbar-row{ display:flex; align-items:flex-end; gap:3px; height:70px; margin:14px 0; }
+  .vecbar{ flex:1; background:var(--ai); border-radius:2px 2px 0 0; opacity:.85; }
+  .vec-caption{ font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--muted); }
+
+  /* doc score rows */
+  .doc-row{
+    display:grid;
+    grid-template-columns:110px 1fr 60px;
+    align-items:center;
+    gap:12px;
+    padding:8px 0;
+    border-bottom:1px solid var(--border);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+  }
+  .doc-row:last-child{ border-bottom:none; }
+  .doc-row .doc-id{ color:var(--text); }
+  .doc-row.dimmed{ opacity:.4; }
+  .bar-track{ background:var(--panel-2); border-radius:4px; height:8px; overflow:hidden; }
+  .bar-fill{ height:100%; background:var(--algo); border-radius:4px; }
+  .doc-row .score{ text-align:right; color:var(--muted); }
+  .row-note{ font-size:11px; color:var(--muted); margin-top:2px; }
+
+  /* rerank table */
+  .rerank-grid{
+    display:grid;
+    grid-template-columns:90px 1fr 1fr 1fr 50px;
+    gap:8px 12px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+  }
+  .rerank-grid .head{ color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.06em; padding-bottom:6px; border-bottom:1px solid var(--border); margin-bottom:4px;}
+  .arrow-up{ color:var(--neutral); }
+  .arrow-down{ color:var(--danger); }
+  .arrow-flat{ color:var(--muted); }
+
+  /* category chips */
+  .cat-chips{ display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 18px; }
+  .cat-chip{
+    border:1px solid var(--border);
+    background:var(--panel-2);
+    color:var(--muted);
+    padding:7px 13px;
+    border-radius:20px;
+    font-size:12.5px;
+    display:flex; align-items:center; gap:7px;
+  }
+  .cat-chip.on{ border-color:var(--algo); color:var(--text); }
+  .cat-chip .swatch{ width:8px; height:8px; border-radius:50%; }
+
+  .kept-list .doc-card, .excluded-list .doc-card{
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    margin-bottom:8px;
+    font-size:13px;
+  }
+  .doc-card.excluded{ opacity:.4; text-decoration:line-through; }
+  .doc-card .cat-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--algo);
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    margin-bottom:4px;
+    display:block;
+  }
+
+  /* prompt block */
+  pre.prompt{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:16px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    color:var(--text);
+    white-space:pre-wrap;
+    word-break:break-word;
+    max-height:340px;
+    overflow-y:auto;
+    margin:0;
+  }
+  .prompt .sys{ color:var(--neutral); }
+  .prompt .ctx{ color:var(--algo); }
+  .prompt .qry{ color:var(--ai); }
+
+  /* generation */
+  .gen-box{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:16px;
+    min-height:90px;
+  }
+  .gen-badge{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--muted);
+    border:1px solid var(--border);
+    padding:3px 8px;
+    border-radius:5px;
+    margin-bottom:10px;
+  }
+  .source-badge{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    background:var(--ai-dim);
+    color:var(--ai);
+    padding:2px 7px;
+    border-radius:5px;
+    margin-left:4px;
+  }
+  .caret{ display:inline-block; width:7px; height:15px; background:var(--ai); vertical-align:-2px; animation:blink 1s step-end infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  /* output stage */
+  .output-answer{
+    font-size:15px;
+    line-height:1.7;
+    margin-bottom:18px;
+  }
+  .output-sources{ display:flex; flex-direction:column; gap:8px; }
+  .output-source{
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .output-source b{ color:var(--text); }
+
+  /* tokens */
+  .token-chips{ display:flex; gap:6px; flex-wrap:wrap; margin-top:14px; }
+  .token-chip{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    padding:4px 9px;
+    border-radius:6px;
+    color:var(--muted);
+  }
+
+  /* knowledge base */
+  .kb-toggle{
+    margin-top:34px;
+    background:none;
+    border:1px solid var(--border);
+    color:var(--muted);
+    padding:10px 16px;
+    border-radius:8px;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .kb-toggle:hover{ color:var(--text); border-color:var(--neutral); }
+  .kb-list{
+    display:none;
+    margin-top:16px;
+    grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+    gap:12px;
+  }
+  .kb-list.open{ display:grid; }
+  .kb-card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:14px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .kb-card .cat-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--algo);
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    display:block;
+    margin-bottom:6px;
+  }
+  .kb-card p{ margin:0; color:var(--text); }
+
+  footer{
+    margin-top:50px;
+    padding-top:20px;
+    border-top:1px solid var(--border);
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Context Engineering · RAG</div>
+    <h1>RAG Pipeline Simulator</h1>
+    <p>Type a question, run it through the pipeline, and watch each stage compute its output live — real cosine similarity, real keyword scoring, no black boxes.</p>
+  </header>
+
+  <div class="controls">
+    <div class="control-row">
+      <input id="queryInput" type="text" placeholder="Ask something about fintech, e.g. how does open banking work?" maxlength="140" />
+      <button id="runBtn">Run pipeline ▶</button>
+    </div>
+    <div class="chips">
+      <button class="chip" data-q="How does open banking let me share my data?">open banking data sharing</button>
+      <button class="chip" data-q="How do lenders assess credit risk for people without credit history?">credit risk assessment</button>
+      <button class="chip" data-q="How is fraud detected on transactions?">fraud detection</button>
+      <button class="chip" data-q="How fast can money move between bank accounts?">real-time payments</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot ai"></span> AI / model-driven step</span>
+    <span><span class="dot algo"></span> Algorithmic / deterministic step</span>
+    <span><span class="dot neutral"></span> Assembly step (no computation)</span>
+  </div>
+
+  <div class="rail-scroll">
+    <div class="rail" id="rail">
+      <button class="node neutral" data-stage="query" disabled><span class="core"></span><span class="label">01<br>Query</span></button>
+      <button class="node ai" data-stage="embed" disabled><span class="core"></span><span class="label">02<br>Embed</span></button>
+      <button class="node algo" data-stage="search" disabled><span class="core"></span><span class="label">03<br>Vector Search</span></button>
+      <button class="node algo" data-stage="rerank" disabled><span class="core"></span><span class="label">04<br>Hybrid + Rerank</span></button>
+      <button class="node algo" data-stage="filter" disabled><span class="core"></span><span class="label">05<br>Metadata Filter</span></button>
+      <button class="node neutral" data-stage="augment" disabled><span class="core"></span><span class="label">06<br>Augment</span></button>
+      <button class="node ai" data-stage="generate" disabled><span class="core"></span><span class="label">07<br>Generate</span></button>
+      <button class="node neutral" data-stage="output" disabled><span class="core"></span><span class="label">08<br>Output</span></button>
+    </div>
+  </div>
+
+  <div class="stage-panel">
+    <div class="stage-info" id="stageInfo"></div>
+    <div class="stage-viz" id="stageViz">
+      <div class="empty-state">Enter a question above and click "Run pipeline" to begin. Each stage will light up in order — you can also click any completed stage to re-inspect it.</div>
+    </div>
+  </div>
+
+  <button class="kb-toggle" id="kbToggle">▸ View the 9-document knowledge base being searched</button>
+  <div class="kb-list" id="kbList"></div>
+
+  <footer>
+    Embeddings here use a simplified feature-hashing trick (a real technique, but far smaller and cruder than a transformer embedding model) so the vector math is genuine and runs entirely in your browser. Generation is templated, not a live model call — clearly marked at that stage.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const EMBED_DIM = 24;
+
+  const DOCS = [
+    { id:"D1", cat:"Payments",   text:"Open banking lets customers securely share their bank transaction data with third-party providers through regulated APIs, enabling services like account aggregation and payment initiation." },
+    { id:"D2", cat:"Compliance", text:"Know Your Customer (KYC) processes verify a customer's identity during onboarding using government ID, biometric checks, and address verification to prevent fraud and meet regulatory requirements." },
+    { id:"D3", cat:"Credit",     text:"Alternative credit scoring uses non-traditional data such as utility payments, rental history, and bank transaction patterns to assess creditworthiness for people with thin credit files." },
+    { id:"D4", cat:"Security",   text:"Fraud detection systems use anomaly detection models to flag transactions that deviate from a customer's typical spending behaviour in real time." },
+    { id:"D5", cat:"Payments",   text:"Buy now, pay later services let shoppers split a purchase into instalments, usually with a soft credit check and no interest if paid on schedule." },
+    { id:"D6", cat:"Credit",     text:"Digital lending platforms automate loan origination by pulling applicant data via APIs, running automated underwriting rules, and disbursing funds within minutes." },
+    { id:"D7", cat:"Compliance", text:"The Consumer Data Right gives individuals the legal right to direct their banking and energy data to be shared with accredited recipients." },
+    { id:"D8", cat:"Security",   text:"Multi-factor authentication combines something a user knows, has, or is to reduce the risk of unauthorised account access." },
+    { id:"D9", cat:"Payments",   text:"Real-time payment rails allow funds to move between bank accounts within seconds, any day of the year." }
+  ];
+
+  const CATS = ["Payments","Compliance","Credit","Security"];
+  const CAT_COLOR = { Payments:"#F2B441", Compliance:"#4FD1C5", Credit:"#8B93FF", Security:"#E8637A" };
+
+  const STAGE_META = {
+    query:    { tag:"neutral", label:"Assembly", title:"01 · Raw query",           desc:"This is exactly what you typed. Nothing computational happens yet — it's just the raw input, tokenized for reference." },
+    embed:    { tag:"ai",      label:"AI-driven", title:"02 · Query embedding",     desc:"The query is converted into a dense numeric vector. In production this is a trained transformer embedding model; here it's a simplified feature-hashing stand-in so the math stays real and visible." },
+    search:   { tag:"algo",    label:"Algorithmic", title:"03 · Vector similarity search", desc:"Cosine similarity is computed between the query vector and every document vector already sitting in the store. No model call — just arithmetic. At scale, this is sped up with ANN algorithms like HNSW." },
+    rerank:   { tag:"algo",    label:"Hybrid + rerank", title:"04 · Hybrid search & rerank", desc:"A keyword overlap score (BM25-style) is blended with the vector score to re-order the shortlist — this is what a cross-encoder reranker does in production, catching exact-term matches vector search alone can miss." },
+    filter:   { tag:"algo",    label:"Algorithmic", title:"05 · Metadata filtering", desc:"Documents are filtered by category metadata before they're allowed into the prompt. Toggle categories below to see the shortlist change." },
+    augment:  { tag:"neutral", label:"Assembly", title:"06 · Prompt augmentation", desc:"The surviving chunks and the original query are assembled into one prompt. No intelligence here — just string construction." },
+    generate: { tag:"ai",      label:"AI-driven", title:"07 · Generation", desc:"The augmented prompt would be sent to an LLM. This box simulates that output by stitching the retrieved chunks together — clearly not a live model call." },
+    output:   { tag:"neutral", label:"Assembly", title:"08 · Final output", desc:"What actually reaches the user: an answer plus the sources it was grounded in." }
+  };
+
+  const STAGE_ORDER = ["query","embed","search","rerank","filter","augment","generate","output"];
+
+  let state = {
+    query: "",
+    computed: false,
+    queryVec: null,
+    docScores: [],      // [{...doc, vecScore}]
+    topK: [],           // top 5 by vector score
+    reranked: [],        // top 3 after hybrid rerank, with keywordScore/combined
+    activeCats: new Set(CATS),
+    currentStage: null
+  };
+
+  // ---------- text / vector utils ----------
+  function tokenize(text){
+    return text.toLowerCase().replace(/[^a-z0-9\s]/g," ").split(/\s+/).filter(Boolean);
+  }
+  function hashToken(tok){
+    let h = 2166136261;
+    for(let i=0;i<tok.length;i++){ h ^= tok.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return Math.abs(h);
+  }
+  function embed(text){
+    const vec = new Array(EMBED_DIM).fill(0);
+    tokenize(text).forEach(tok=>{
+      const idx = hashToken(tok) % EMBED_DIM;
+      vec[idx] += 1;
+    });
+    const norm = Math.sqrt(vec.reduce((s,v)=>s+v*v,0)) || 1;
+    return vec.map(v=>v/norm);
+  }
+  function cosineSim(a,b){
+    let dot=0;
+    for(let i=0;i<a.length;i++) dot += a[i]*b[i];
+    return dot;
+  }
+  function keywordScore(query, docText){
+    const qToks = new Set(tokenize(query));
+    const dToks = tokenize(docText);
+    if(qToks.size === 0) return 0;
+    let matches = 0;
+    dToks.forEach(t=>{ if(qToks.has(t)) matches++; });
+    return matches / qToks.size;
+  }
+
+  const DOC_VECS = DOCS.map(d => ({ ...d, vec: embed(d.text) }));
+
+  // ---------- compute pipeline ----------
+  function computeAll(query){
+    const queryVec = embed(query);
+
+    const docScores = DOC_VECS.map(d => ({
+      ...d,
+      vecScore: Math.max(0, cosineSim(queryVec, d.vec))
+    })).sort((a,b) => b.vecScore - a.vecScore);
+
+    const topK = docScores.slice(0, 5);
+
+    const maxKw = Math.max(...topK.map(d => keywordScore(query, d.text)), 0.0001);
+    const reranked = topK.map(d => {
+      const kw = keywordScore(query, d.text);
+      const kwNorm = kw / maxKw;
+      const combined = 0.6 * d.vecScore + 0.4 * kwNorm;
+      return { ...d, kwScore: kwNorm, combined };
+    }).sort((a,b) => b.combined - a.combined).slice(0, 3);
+
+    // rank shift vs original vector-search order
+    reranked.forEach(r => {
+      const originalIdx = topK.findIndex(t => t.id === r.id);
+      const newIdx = reranked.indexOf(r);
+      r.shift = originalIdx - newIdx;
+    });
+
+    state.query = query;
+    state.queryVec = queryVec;
+    state.docScores = docScores;
+    state.topK = topK;
+    state.reranked = reranked;
+    state.computed = true;
+  }
+
+  function filteredDocs(){
+    return state.reranked.filter(d => state.activeCats.has(d.cat));
+  }
+
+  function buildPrompt(){
+    const kept = filteredDocs();
+    const ctx = kept.map((d,i) => `[Source ${i+1} · ${d.cat}] ${d.text}`).join("\n");
+    return {
+      sys: "You are a helpful assistant. Answer only using the context below. Cite sources by number.",
+      ctx: ctx || "(no context — all categories filtered out)",
+      qry: state.query
+    };
+  }
+
+  function simulatedAnswer(){
+    const kept = filteredDocs();
+    if(kept.length === 0){
+      return { text: "No context survived filtering, so there's nothing grounded to answer from. Try enabling more categories.", sources: [] };
+    }
+    const parts = kept.map((d,i) => `${d.text.replace(/\.$/,"")} [Source ${i+1}]`);
+    let text = parts[0];
+    if(parts[1]) text += " Additionally, " + parts[1].charAt(0).toLowerCase() + parts[1].slice(1);
+    if(parts[2]) text += " It's also worth noting that " + parts[2].charAt(0).toLowerCase() + parts[2].slice(1);
+    return { text, sources: kept };
+  }
+
+  // ---------- rendering ----------
+  function barColorScale(score){
+    return Math.round(score * 100);
+  }
+
+  function renderStageInfo(stageKey){
+    const meta = STAGE_META[stageKey];
+    document.getElementById("stageInfo").innerHTML = `
+      <span class="stage-tag ${meta.tag}">${meta.label}</span>
+      <h2>${meta.title}</h2>
+      <p>${meta.desc}</p>
+    `;
+  }
+
+  function renderStage(stageKey){
+    state.currentStage = stageKey;
+    renderStageInfo(stageKey);
+    const viz = document.getElementById("stageViz");
+
+    if(stageKey === "query"){
+      const toks = tokenize(state.query);
+      viz.innerHTML = `
+        <div style="font-family:'Space Grotesk',sans-serif; font-size:20px; margin-bottom:6px;">"${escapeHtml(state.query)}"</div>
+        <div class="vec-caption">${toks.length} tokens after lowercasing &amp; stripping punctuation</div>
+        <div class="token-chips">${toks.map(t=>`<span class="token-chip">${escapeHtml(t)}</span>`).join("")}</div>
+      `;
+    }
+
+    if(stageKey === "embed"){
+      const bars = state.queryVec.map(v => `<div class="vecbar" style="height:${Math.max(3, v*100)}%"></div>`).join("");
+      viz.innerHTML = `
+        <div class="vec-caption">Query → ${EMBED_DIM}-dimension vector (feature-hashing trick)</div>
+        <div class="vecbar-row">${bars}</div>
+        <div class="vec-caption">Every document in the store was embedded the same way, ahead of time, when it was indexed.</div>
+      `;
+    }
+
+    if(stageKey === "search"){
+      const rows = state.docScores.map(d => {
+        const inTopK = state.topK.some(t => t.id === d.id);
+        return `
+          <div class="doc-row ${inTopK ? "" : "dimmed"}">
+            <div class="doc-id">${d.id} · ${d.cat}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${barColorScale(d.vecScore)}%"></div></div>
+            <div class="score">${d.vecScore.toFixed(3)}</div>
+          </div>`;
+      }).join("");
+      viz.innerHTML = `
+        <div class="vec-caption" style="margin-bottom:10px;">Cosine similarity, query vs. all 9 stored vectors — top 5 (bright) pass through to reranking</div>
+        ${rows}
+      `;
+    }
+
+    if(stageKey === "rerank"){
+      const rows = state.reranked.map(d => {
+        let arrowClass = "arrow-flat", arrowLabel = "—";
+        if(d.shift > 0){ arrowClass = "arrow-up"; arrowLabel = `↑${d.shift}`; }
+        if(d.shift < 0){ arrowClass = "arrow-down"; arrowLabel = `↓${Math.abs(d.shift)}`; }
+        return `
+          <div class="rerank-grid" style="margin-bottom:4px;">
+            <div>${d.id}</div>
+            <div>vec ${d.vecScore.toFixed(2)}</div>
+            <div>kw ${d.kwScore.toFixed(2)}</div>
+            <div>comb ${d.combined.toFixed(2)}</div>
+            <div class="${arrowClass}">${arrowLabel}</div>
+          </div>`;
+      }).join("");
+      viz.innerHTML = `
+        <div class="rerank-grid head">
+          <div>Doc</div><div>Vector</div><div>Keyword</div><div>Combined</div><div>Shift</div>
+        </div>
+        ${rows}
+        <div class="vec-caption" style="margin-top:14px;">Combined = 0.6 × vector score + 0.4 × keyword overlap. Arrows show rank movement vs. vector-only order.</div>
+      `;
+    }
+
+    if(stageKey === "filter"){
+      const chips = CATS.map(c => `
+        <button class="cat-chip ${state.activeCats.has(c) ? "on" : ""}" data-cat="${c}">
+          <span class="swatch" style="background:${CAT_COLOR[c]}"></span>${c}
+        </button>`).join("");
+      const cards = state.reranked.map(d => {
+        const excluded = !state.activeCats.has(d.cat);
+        return `<div class="doc-card ${excluded ? "excluded" : ""}">
+          <span class="cat-label">${d.cat}</span>${d.text}
+        </div>`;
+      }).join("");
+      viz.innerHTML = `
+        <div class="vec-caption" style="margin-bottom:6px;">Toggle categories — the reranked shortlist updates live</div>
+        <div class="cat-chips">${chips}</div>
+        ${cards}
+      `;
+      viz.querySelectorAll(".cat-chip").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const cat = btn.dataset.cat;
+          if(state.activeCats.has(cat)) state.activeCats.delete(cat); else state.activeCats.add(cat);
+          renderStage("filter");
+        });
+      });
+    }
+
+    if(stageKey === "augment"){
+      const p = buildPrompt();
+      viz.innerHTML = `
+        <pre class="prompt"><span class="sys">${escapeHtml(p.sys)}</span>
+
+<span class="ctx">${escapeHtml(p.ctx)}</span>
+
+<span class="qry">Question: ${escapeHtml(p.qry)}</span></pre>
+      `;
+    }
+
+    if(stageKey === "generate"){
+      const ans = simulatedAnswer();
+      viz.innerHTML = `
+        <div class="gen-badge">Simulated — no live model call</div>
+        <div class="gen-box">${escapeHtml(ans.text)}<span class="caret"></span></div>
+      `;
+    }
+
+    if(stageKey === "output"){
+      const ans = simulatedAnswer();
+      const sourcesHtml = ans.sources.map((s,i) => `
+        <div class="output-source"><b>Source ${i+1} · ${s.cat}</b><br>${escapeHtml(s.text)}</div>
+      `).join("");
+      viz.innerHTML = `
+        <div class="output-answer">${escapeHtml(ans.text).replace(/\[Source (\d+)\]/g, '<span class="source-badge">Source $1</span>')}</div>
+        <div class="output-sources">${sourcesHtml}</div>
+      `;
+    }
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  // ---------- rail control ----------
+  function setRailEnabled(enabled){
+    document.querySelectorAll(".node").forEach(n => n.disabled = !enabled);
+  }
+  function setActiveNode(stageKey, markDone){
+    document.querySelectorAll(".node").forEach(n => {
+      n.classList.remove("active");
+      if(markDone && STAGE_ORDER.indexOf(n.dataset.stage) < STAGE_ORDER.indexOf(stageKey)) n.classList.add("done");
+    });
+    const node = document.querySelector(`.node[data-stage="${stageKey}"]`);
+    if(node) node.classList.add("active", "done");
+  }
+
+  function runPipeline(){
+    const q = document.getElementById("queryInput").value.trim();
+    if(!q) {
+      document.getElementById("queryInput").focus();
+      return;
+    }
+    state.activeCats = new Set(CATS);
+    computeAll(q);
+    setRailEnabled(true);
+    document.querySelectorAll(".node").forEach(n => n.classList.remove("done","active"));
+
+    let i = 0;
+    document.getElementById("runBtn").disabled = true;
+    function step(){
+      if(i >= STAGE_ORDER.length){
+        document.getElementById("runBtn").disabled = false;
+        return;
+      }
+      const key = STAGE_ORDER[i];
+      setActiveNode(key, true);
+      renderStage(key);
+      i++;
+      setTimeout(step, 850);
+    }
+    step();
+  }
+
+  document.getElementById("runBtn").addEventListener("click", runPipeline);
+  document.getElementById("queryInput").addEventListener("keydown", e => { if(e.key === "Enter") runPipeline(); });
+
+  document.querySelectorAll(".chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      document.getElementById("queryInput").value = chip.dataset.q;
+      runPipeline();
+    });
+  });
+
+  document.querySelectorAll(".node").forEach(node => {
+    node.addEventListener("click", () => {
+      if(node.disabled) return;
+      setActiveNode(node.dataset.stage, true);
+      renderStage(node.dataset.stage);
+    });
+  });
+
+  // ---------- knowledge base panel ----------
+  const kbList = document.getElementById("kbList");
+  kbList.innerHTML = DOCS.map(d => `
+    <div class="kb-card">
+      <span class="cat-label">${d.id} · ${d.cat}</span>
+      <p>${escapeHtml(d.text)}</p>
+    </div>
+  `).join("");
+  document.getElementById("kbToggle").addEventListener("click", function(){
+    kbList.classList.toggle("open");
+    this.textContent = kbList.classList.contains("open")
+      ? "▾ Hide the 9-document knowledge base"
+      : "▸ View the 9-document knowledge base being searched";
+  });
+
+})();
+</script>
+</body>
+</html>
