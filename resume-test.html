@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rajat Singla | Product Manager</title>
+  <style>
+    :root {
+      --ink: #17212b;
+      --muted: #667085;
+      --accent: #0f766e;
+      --accent-soft: #e8f5f3;
+      --line: #d9e1e7;
+      --paper: #ffffff;
+      --canvas: #eef2f5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.42;
+    }
+
+    .resume {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 24px auto;
+      background: var(--paper);
+      box-shadow: 0 14px 40px rgba(23, 33, 43, 0.14);
+      display: grid;
+      grid-template-columns: 31% 69%;
+      overflow: hidden;
+    }
+
+    aside {
+      background: #17313a;
+      color: #f7fbfc;
+      padding: 34px 28px;
+    }
+
+    main {
+      padding: 34px 38px 30px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 33px;
+      line-height: 1.05;
+      letter-spacing: -0.9px;
+    }
+
+    .headline {
+      margin-top: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .location {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .section {
+      margin-top: 22px;
+    }
+
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 11px;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: "";
+      height: 1px;
+      background: var(--line);
+      flex: 1;
+    }
+
+    .summary {
+      font-size: 12.2px;
+      color: #31404d;
+      margin: 0;
+    }
+
+    .role {
+      margin-bottom: 15px;
+    }
+
+    .role:last-child { margin-bottom: 0; }
+
+    .role-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .role-title {
+      font-size: 13.2px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .company {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .dates {
+      font-size: 10.8px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    ul {
+      margin: 6px 0 0 17px;
+      padding: 0;
+    }
+
+    li {
+      margin-bottom: 4px;
+      font-size: 11.25px;
+      color: #34424f;
+    }
+
+    .contact-block,
+    .side-section {
+      margin-bottom: 27px;
+    }
+
+    .side-title {
+      margin: 0 0 10px;
+      font-size: 10.5px;
+      letter-spacing: 1.7px;
+      text-transform: uppercase;
+      color: #9bd4cf;
+      font-weight: 800;
+    }
+
+    .contact-item {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 11.5px;
+      color: #f7fbfc;
+      text-decoration: none;
+      word-break: break-word;
+    }
+
+    .skill-list,
+    .cert-list,
+    .edu-list,
+    .career-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .pill {
+      display: inline-block;
+      background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      padding: 5px 9px;
+      margin: 0 5px 6px 0;
+      font-size: 10.5px;
+    }
+
+    .side-item strong {
+      display: block;
+      font-size: 11.4px;
+      color: #ffffff;
+    }
+
+    .side-item span {
+      display: block;
+      margin-top: 2px;
+      font-size: 10.2px;
+      color: #c4d5da;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .metric {
+      background: var(--accent-soft);
+      border-radius: 10px;
+      padding: 9px 10px;
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--accent);
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 4px;
+      font-size: 9.7px;
+      color: #49605e;
+    }
+
+    .earlier {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 18px;
+      font-size: 10.8px;
+      color: #354451;
+    }
+
+    .earlier div {
+      padding-bottom: 6px;
+      border-bottom: 1px solid #edf1f4;
+    }
+
+    .earlier strong { color: var(--ink); }
+
+    @media print {
+      body { background: #fff; }
+      .resume {
+        margin: 0;
+        box-shadow: none;
+        width: 210mm;
+        min-height: 297mm;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .resume {
+        width: 100%;
+        margin: 0;
+        grid-template-columns: 1fr;
+      }
+      aside, main { padding: 28px 24px; }
+      .role-head { grid-template-columns: 1fr; gap: 2px; }
+      .dates { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <article class="resume">
+    <aside>
+      <section class="contact-block">
+        <h2 class="side-title">Contact</h2>
+        <a class="contact-item" href="tel:+61469955044">+61 469 955 044</a>
+        <a class="contact-item" href="mailto:rajat.singla@gmail.com">rajat.singla@gmail.com</a>
+        <a class="contact-item" href="https://www.linkedin.com/in/rajat-singla-rsi">linkedin.com/in/rajat-singla-rsi</a>
+      </section>
+
+      <section class="side-section">
+        <h2 class="side-title">Core Skills</h2>
+        <div class="skill-list">
+          <div>
+            <span class="pill">Product Management</span>
+            <span class="pill">Product Roadmapping</span>
+            <span class="pill">Open Banking</span>
+            <span class="pill">CDR</span>
+            <span class="pill">Mixpanel</span>
+            <span class="pill">Appcues</span>
+            <span class="pill">API Products</span>
+            <span class="pill">AI-assisted Workflows</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="side-section">
+        <h2 class="side-title">Certifications</h2>
+        <div class="cert-list">
+          <div class="side-item"><strong>Certified ScrumMaster®</strong><span>CSM®</span></div>
+          <div class="side-item"><strong>Business Analysis</strong><span>BABOK / IIBA</span></div>
+          <div class="side-item"><strong>Product Manager</strong></div>
+          <div class="side-item"><strong>Payment Systems</strong></div>
+          <div class="side-item"><strong>Six Sigma Green Belt</strong></div>
+        </div>
+      </section>
+
+      <section class="side-section">
+        <h2 class="side-title">Education</h2>
+        <div class="edu-list">
+          <div class="side-item">
+            <strong>National Institute of Technology Jamshedpur</strong>
+            <span>Bachelor's Degree, Civil Engineering · 2001–2005</span>
+          </div>
+          <div class="side-item">
+            <strong>D.M. College, Moga</strong>
+            <span>Senior Secondary, Maths and Science · 1999–2001</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="side-section">
+        <h2 class="side-title">Earlier Career</h2>
+        <div class="career-list">
+          <div class="side-item"><strong>Fidelity Investments</strong><span>Project Lead · 2011</span></div>
+          <div class="side-item"><strong>Technicolor</strong><span>Consultant (BA) · 2011</span></div>
+          <div class="side-item"><strong>RockTenn</strong><span>Project Lead · 2010–2011</span></div>
+          <div class="side-item"><strong>Ferrari</strong><span>Business Analyst · 2009–2010</span></div>
+          <div class="side-item"><strong>Genworth</strong><span>Module Lead / BA · 2007–2009</span></div>
+          <div class="side-item"><strong>Tata Consultancy Services</strong><span>Analyst Programmer · 2005–2007</span></div>
+        </div>
+      </section>
+    </aside>
+
+    <main>
+      <header>
+        <h1>Rajat Singla</h1>
+        <div class="headline">Product Manager · Open Banking & CDR · FinTech · AI & API · Consumer Digital Products</div>
+        <div class="location">Sydney, New South Wales, Australia</div>
+      </header>
+
+      <section class="section">
+        <h2 class="section-title">Profile</h2>
+        <p class="summary">
+          Product Manager with 5 years of end-to-end product ownership in Open Banking and CDR on a leading Australian mortgage origination SaaS platform. Built an Open Banking product from scratch, covering consumer consent journeys, CDR data connectivity, lender and aggregator integrations, product analytics, and regulatory delivery across CDR, APRA, and responsible lending.
+        </p>
+        <div class="metrics">
+          <div class="metric"><strong>5 yrs</strong><span>End-to-end product ownership</span></div>
+          <div class="metric"><strong>10k+</strong><span>Loan applications using Open Banking data</span></div>
+          <div class="metric"><strong>3 days</strong><span>Loan processing time reduced via eDelivery</span></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Experience</h2>
+
+        <div class="role">
+          <div class="role-head">
+            <h3 class="role-title"><span class="company">NextGen</span> · Product Manager</h3>
+            <div class="dates">Dec 2021 – Present</div>
+          </div>
+          <ul>
+            <li>Own the end-to-end roadmap for Open Banking and CDR features on a B2B SaaS platform, aligning delivery to business KPIs and regulatory obligations.</li>
+            <li>Built and scaled consumer consent journeys and CDR connectivity across major aggregators and lenders, enabling tens of thousands of loan applications.</li>
+            <li>Use Mixpanel and Appcues to analyse consent funnels, feature adoption, onboarding, and activation.</li>
+            <li>Lead discovery across broker and lender segments, translating user interviews and AI-assisted synthesis into prioritised requirements.</li>
+            <li>Design API-driven and AI-assisted workflows across consent, data verification, automated pre-fill, and credentialing pipelines.</li>
+          </ul>
+        </div>
+
+        <div class="role">
+          <div class="role-head">
+            <h3 class="role-title"><span class="company">NextGen</span> · Business Analyst / Project Manager</h3>
+            <div class="dates">Jul 2018 – Nov 2021</div>
+          </div>
+          <ul>
+            <li>Delivered mortgage origination initiatives across lender onboarding, compliance, eSign, title search, and valuation integrations.</li>
+            <li>Championed eSignature and eDelivery of loan documents, reducing overall loan processing time by three days.</li>
+          </ul>
+        </div>
+
+        <div class="role">
+          <div class="role-head">
+            <h3 class="role-title"><span class="company">Genworth Australia</span> · Senior Business Analyst</h3>
+            <div class="dates">Dec 2017 – Jun 2018</div>
+          </div>
+          <ul>
+            <li>Led requirements for a rules engine, application scoring, and auto-decisioning platform in online LMI origination.</li>
+            <li>Redesigned decisioning to improve turnaround time through straight-through processing.</li>
+          </ul>
+        </div>
+
+        <div class="role">
+          <div class="role-head">
+            <h3 class="role-title"><span class="company">DWS</span> · Consultant (Business Analyst)</h3>
+            <div class="dates">Jul 2016 – Dec 2017</div>
+          </div>
+          <ul>
+            <li>Led BA and Agile delivery across three concurrent launches: a consumer mobile app, travel management portal, and co-working platform.</li>
+          </ul>
+        </div>
+
+        <div class="role">
+          <div class="role-head">
+            <h3 class="role-title"><span class="company">Target Group</span> · Consultant (Business Analyst)</h3>
+            <div class="dates">Aug 2015 – Feb 2016</div>
+          </div>
+          <ul>
+            <li>Delivered requirements, user stories, and test artefacts for personal loans, mortgages, and vehicle finance in Agile/Scrum.</li>
+          </ul>
+        </div>
+
+        <div class="role">
+          <div class="role-head">
+            <h3 class="role-title"><span class="company">GE Capital</span> · Business Analyst & Project Lead</h3>
+            <div class="dates">Jan 2012 – Jul 2015</div>
+          </div>
+          <ul>
+            <li>Led knowledge transition of two major business applications to stable state within six months.</li>
+            <li>Delivered Six Sigma DMAIC improvements that cut support costs by 15% and reduced reconciliation mismatches from about $5M to under $800K.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </article>
+</body>
+</html>
